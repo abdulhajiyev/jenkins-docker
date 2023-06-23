@@ -3,7 +3,7 @@
 DOCKER_IMAGE_NAME="jenkins-docker"
 
 # Run the Trivy vulnerability scanner
-scanResult=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${DOCKER_IMAGE_NAME}:jenkins.latest --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed)
+scanResult=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${DOCKER_IMAGE_NAME} --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed)
 
 # echo "Vulnerability Scan Result:"
 # echo "${scanResult}"
