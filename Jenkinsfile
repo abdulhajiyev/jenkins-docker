@@ -11,15 +11,13 @@ pipeline {
         stage('Docker Image Scan') {
             steps {
                 script {
-                    def trivyOutput = docker.image('aquasec/trivy:latest').run("-v $PWD:/workdir --rm --severity HIGH,CRITICAL --format json jenkins-docker:tag")
+                    def scanResult = sh(script: "bash docker-scan.sh", returnStdout: true).trim()
 
-                    def trivyJson = readJSON(text: trivyOutput.text())
+                    def highCount = sh(script: "echo '${scanResult}' | grep -o -E 'HIGH: [0-9]+' | awk '{print \$2}'", returnStdout: true).trim()
+                    def criticalCount = sh(script: "echo '${scanResult}' | grep -o -E 'CRITICAL: [0-9]+' | awk '{print \$2}'", returnStdout: true).trim()
 
-                    def highVulnCount = trivyJson[0].Vulnerabilities.high
-                    def criticalVulnCount = trivyJson[0].Vulnerabilities.critical
-                    
-                    echo "High Vulnerabilities: ${highVulnCount}"
-                    echo "Critical Vulnerabilities: ${criticalVulnCount}"
+                    echo "Number of HIGH vulnerabilities: ${highCount}"
+                    echo "Number of CRITICAL vulnerabilities: ${criticalCount}"
                 }
             }
         }
