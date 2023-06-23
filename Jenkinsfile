@@ -11,14 +11,15 @@ pipeline {
         stage('Docker Image Scan') {
             steps {
                 script {
-                    def trivyOutput = sh(script: 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /var/jenkins_home/workspace/jenkins-docker_master:/root/ aquasec/trivy --format json jenkins-docker:tag', returnStdout: true).trim()
-                    def vulnerabilities = readJSON(text: trivyOutput)
+                    def trivyOutput = docker.image('aquasec/trivy:latest').run("-v $PWD:/workdir --rm --severity HIGH,CRITICAL --format json jenkins-docker:tag")
+
+                    def trivyJson = readJSON(text: trivyOutput.text())
+
+                    def highVulnCount = trivyJson[0].Vulnerabilities.high
+                    def criticalVulnCount = trivyJson[0].Vulnerabilities.critical
                     
-                    def highVulnerabilities = vulnerabilities.findAll { it.Severity == 'HIGH' }
-                    def criticalVulnerabilities = vulnerabilities.findAll { it.Severity == 'CRITICAL' }
-                    
-                    echo "Number of High Vulnerabilities: ${highVulnerabilities.size()}"
-                    echo "Number of Critical Vulnerabilities: ${criticalVulnerabilities.size()}"
+                    echo "High Vulnerabilities: ${highVulnCount}"
+                    echo "Critical Vulnerabilities: ${criticalVulnCount}"
                 }
             }
         }
