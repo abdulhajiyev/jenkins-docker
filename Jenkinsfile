@@ -7,10 +7,19 @@ pipeline {
                 sh 'docker build -t jenkins-docker .'
             }
         }
-        
+
         stage('Docker Image Scan') {
             steps {
-                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/root/ aquasec/trivy jenkins-docker'
+                script {
+                    def trivyOutput = sh(script: 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/root/ aquasec/trivy --format json jenkins-docker', returnStdout: true).trim()
+                    def vulnerabilities = readJSON(text: trivyOutput)
+                    
+                    def highVulnerabilities = vulnerabilities.findAll { it.Severity == 'HIGH' }
+                    def criticalVulnerabilities = vulnerabilities.findAll { it.Severity == 'CRITICAL' }
+                    
+                    echo "Number of High Vulnerabilities: ${highVulnerabilities.size()}"
+                    echo "Number of Critical Vulnerabilities: ${criticalVulnerabilities.size()}"
+                }
             }
         }
     }
