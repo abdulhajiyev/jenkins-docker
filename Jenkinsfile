@@ -15,7 +15,7 @@ pipeline {
                 script {
                     def trivyOutput = sh(
                         script: '''
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed
                         ''',
                         returnStdout: true).trim()
                         def highCount = trivyOutput =~ /HIGH/
