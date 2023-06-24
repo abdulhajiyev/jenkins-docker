@@ -15,7 +15,7 @@ pipeline {
                 script {
                     def trivyOutput = sh(
                         script: '''
-                            sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker
                         ''',
                         returnStdout: true
                     ).trim()
