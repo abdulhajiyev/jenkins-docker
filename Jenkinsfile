@@ -9,22 +9,22 @@ pipeline {
                 sh 'docker build -t jenkins-docker .'
             }
         }
-        
+
         stage('Trivy Scan') {
             steps {
                 script {
                     def trivyOutput = sh(
                         script: '''
-                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker
                         ''',
-                        returnStdout: true
-                    ).trim()
-
-                    def highCriticalCount = trivyOutput =~ /(HIGH|CRITICAL)/
-                    def highCriticalCountValue = highCriticalCount.size()
-
-                    echo "Number of HIGH and CRITICAL vulnerabilities: ${highCriticalCountValue}"
-                }
+                        returnStdout: true).trim()
+                        def highCount = trivyOutput =~ /HIGH/
+                        def highCountValue = highCount.size()
+                        def criticalCount = trivyOutput =~ /CRITICAL/
+                        def criticalCountValue = criticalCount.size()
+                        echo "Number of HIGH vulnerabilities: ${highCountValue}"
+                        echo "Number of CRITICAL vulnerabilities: ${criticalCountValue}"
+                        }
             }
         }
     }
