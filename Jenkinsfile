@@ -25,19 +25,20 @@ pipeline {
                     if (highCount && criticalCount) {
                         def highVulnerabilities = highCount[0][1]
                         def criticalVulnerabilities = criticalCount[0][1]
-
+                        
                         echo "High Vulnerabilities: ${highVulnerabilities}"
                         echo "Critical Vulnerabilities: ${criticalVulnerabilities}"
+
+                        if (highVulnerabilities > 0 || criticalVulnerabilities > 0) {
+                            currentBuild.result = 'UNSTABLE'
+                        } else {
+                            currentBuild.result = 'SUCCESS'
+                        }
                     }
                         else {
                         error 'Failed to parse vulnerability counts.'
                         }
 
-                    if (highVulnerabilities > 0 || criticalVulnerabilities > 0) {
-                        currentBuild.result = 'UNSTABLE'
-                        } else {
-                        currentBuild.result = 'SUCCESS'
-                    }
                 }
             }
         }
