@@ -13,7 +13,7 @@ pipeline {
             stage('Trivy Scan') {
                 steps {
                     script {
-                    def trivyOutput = sh(script: "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${env.DOCKER_IMAGE_NAME} --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed | grep 'Total: '", returnStdout: true).trim()
+                    def trivyOutput = sh(script: "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image jenkins-docker --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed | grep 'Total: '", returnStdout: true).trim()
 
 
                     def highCount = trivyOutput =~ /HIGH: (\d+)/
