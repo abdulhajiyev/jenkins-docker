@@ -14,7 +14,7 @@ pipeline {
             steps {
                 script {
                     def vulnerabilityCount = sh (
-                        script: 'trivy image mycontainerimage:latest --format "template|{{len .Vulnerabilities.HighSeverity}} high, {{len .Vulnerabilities.CriticalSeverity}} critical"',
+                        script: 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker --format "template|{{len .Vulnerabilities.HighSeverity}} high, {{len .Vulnerabilities.CriticalSeverity}} critical"',
                         returnStdout: true
                     ).trim()
                     
