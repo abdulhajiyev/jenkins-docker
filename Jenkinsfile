@@ -29,7 +29,7 @@ pipeline {
                         echo "High Vulnerabilities: ${highVulnerabilities}"
                         echo "Critical Vulnerabilities: ${criticalVulnerabilities}"
 
-                        if (highVulnerabilities > 0 || criticalVulnerabilities > 0) {
+                        if (highVulnerabilities.toString() > 0 || criticalVulnerabilities.toString() > 0) {
                             currentBuild.result = 'UNSTABLE'
                         } else {
                             currentBuild.result = 'SUCCESS'
