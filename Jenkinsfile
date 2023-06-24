@@ -20,7 +20,11 @@ pipeline {
         stage('Generate HTML Report') {
             steps {
                 // Convert the JSON scan results to HTML using a custom script
-                sh 'python3 -c "import json, sys, html; vulns = json.load(open(\'results.json\')); html_report = \'<html><body><table><tr><th>Vulnerability</th><th>Severity</th></tr>\'; [html_report += \'<tr><td>{}</td><td>{}</td></tr>\'.format(html.escape(vuln[\'Vulnerability\']), vuln[\'Severity\']) for vuln in vulns]; html_report += \'</table></body></html>\'; sys.stdout.write(html_report)" > results.html'
+                sh """
+                echo '<html><body><table><tr><th>Vulnerability</th><th>Severity</th></tr>' > results.html
+                cat results.json | jq -r '.[] | "<tr><td>\(.Vulnerability)</td><td>\(.Severity)</td></tr>"' >> results.html
+                echo '</table></body></html>' >> results.html
+                """
             }
         }
         
