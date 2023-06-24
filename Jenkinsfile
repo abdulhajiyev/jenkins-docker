@@ -13,18 +13,17 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 script {
-                    def trivyOutput = sh(
-                        script: '''
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed
-                        ''',
-                        returnStdout: true).trim()
-                        def highCount = trivyOutput =~ /HIGH/
-                        def highCountValue = highCount.size()
-                        def criticalCount = trivyOutput =~ /CRITICAL/
-                        def criticalCountValue = criticalCount.size()
-                        echo "Number of HIGH vulnerabilities: ${highCountValue}"
-                        echo "Number of CRITICAL vulnerabilities: ${criticalCountValue}"
-                        }
+                    def vulnerabilityCount = sh (
+                        script: 'trivy image mycontainerimage:latest --format "template|{{len .Vulnerabilities.HighSeverity}} high, {{len .Vulnerabilities.CriticalSeverity}} critical"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    def highCount = vulnerabilityCount.split(" ")[0]
+                    def criticalCount = vulnerabilityCount.split(" ")[2]
+                    
+                    echo "High Severity Count: $highCount"
+                    echo "Critical Severity Count: $criticalCount"
+                }
             }
         }
     }
