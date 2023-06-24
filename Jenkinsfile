@@ -7,32 +7,28 @@ pipeline {
                 sh 'docker build -t jenkins-docker .'
             }
         }
-
-        stage('Install Trivy') {
+        
+        stage('Scan Docker Image') {
             steps {
-                sh 'wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -'
-                sh 'echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list'
-                sh 'sudo apt-get update'
-                sh 'sudo apt-get install trivy'
+                // Run Trivy in a Docker container to scan the Docker image for vulnerabilities
+                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image --format json --output results.json jenkins-docker'
             }
         }
-
-        stage('Scan Docker Image with Trivy') {
+        
+        stage('Generate HTML Report') {
             steps {
-                script {
-                    /* docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy:0.18.3 python:3.4-alpine */
-
-                    def scanOutput = sh(script: 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy:0.18.3 jenkins-docker --format json', returnStdout: true).trim()
-
-                    def vulnerabilities = readJSON(text: scanOutput)
-
-                    def highCount = vulnerabilities.Vulnerabilities.findAll { it.Severity == 'HIGH' }.size()
-                    def criticalCount = vulnerabilities.Vulnerabilities.findAll { it.Severity == 'CRITICAL' }.size()
-
-                    echo "High Vulnerabilities: ${highCount}"
-                    echo "Critical Vulnerabilities: ${criticalCount}"
-                }
+                // Convert the JSON scan results to HTML using Trivy itself
+                sh 'docker run --rm -v $(pwd):/workdir aquasec/trivy:latest report --format html --output results.html --input results.json'
+            }
+        }
+        
+        stage('Display Results in Jenkins') {
+            steps {
+                // Archive the HTML report as an artifact
+                archiveArtifacts artifacts: 'results.html', onlyIfSuccessful: false
+                
+                // Publish the HTML report to be displayed in Jenkins
+                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: '', reportFiles: 'results.html', reportName: 'Vulnerability Scan Report'])
             }
         }
     }
