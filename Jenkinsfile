@@ -13,12 +13,25 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 script {
-                    def trivyOutput = sh(
-                        script: '''
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed | grep 'Total: '
-                        ''',
-                        returnStdout: true).trim()
-                }
+            def trivyOutput = sh(
+                script: '''
+                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workdir aquasec/trivy:latest image jenkins-docker --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed | grep 'Total: '
+                ''',
+                returnStdout: true).trim()
+
+            def highCount = trivyOutput =~ /HIGH: (\d+)/
+            def criticalCount = trivyOutput =~ /CRITICAL: (\d+)/
+
+            if (highCount && criticalCount) {
+                def highVulnerabilities = highCount[0][1]
+                def criticalVulnerabilities = criticalCount[0][1]
+
+                echo "High Vulnerabilities: ${highVulnerabilities}"
+                echo "Critical Vulnerabilities: ${criticalVulnerabilities}"
+            } else {
+                error "Failed to parse vulnerability counts."
+            }
+        }
             }
         }
     }
